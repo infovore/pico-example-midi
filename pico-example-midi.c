@@ -80,6 +80,7 @@ uint8_t note_sequence[] =
 void midi_task(void)
 {
   static uint32_t start_ms = 0;
+  uint8_t msg[3];
 
   // send note every 1000 ms
   if (board_millis() - start_ms < 286) return; // not enough time
@@ -93,10 +94,16 @@ void midi_task(void)
   if (previous < 0) previous = sizeof(note_sequence) - 1;
 
   // Send Note On for current position at full velocity (127) on channel 1.
-  tudi_midi_write24(0, 0x90, note_sequence[note_pos], 127);
+  msg[0] = 0x90;                    // Note On - Channel 1
+  msg[1] = note_sequence[note_pos]; // Note Number
+  msg[2] = 127;                     // Velocity
+  tud_midi_n_stream_write(0, 0, msg, 3);
 
   // Send Note Off for previous note.
-  tudi_midi_write24(0, 0x80, note_sequence[previous], 0);
+  msg[0] = 0x80;                    // Note Off - Channel 1
+  msg[1] = note_sequence[previous]; // Note Number
+  msg[2] = 0;                       // Velocity
+  tud_midi_n_stream_write(0, 0, msg, 3);
 
   // Increment position
   note_pos++;
